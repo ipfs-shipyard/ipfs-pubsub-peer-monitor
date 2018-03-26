@@ -11,39 +11,40 @@ const mockPubsub = {
 }
 
 describe('start and stop', () => {
+  it('started property is immutable', async () => {
+    const m = new Monitor(mockPubsub, topic)
+    let err
+    try {
+      m.started = true
+    } catch (e) {
+      err = e
+    }
+    assert.equal(err, "Error: 'started' is read-only")
+  })
+
   describe('poll loop', () => {
     it('starts polling peers', () => {
       const m = new Monitor(mockPubsub, topic)
       assert.notEqual(m, null)
-      assert.notEqual(m._interval, null)
+      assert.notEqual(m.started, true)
     })
 
     it('doesn\'t start polling peers', () => {
       const m = new Monitor(mockPubsub, topic, { start: false })
       assert.notEqual(m, null)
-      assert.equal(m._interval, null)
+      assert.equal(m.started, false)
     })
 
     it('starts polling peers when started manually', () => {
       const m = new Monitor(mockPubsub, topic, { start: false })
-      assert.equal(m._interval, null)
       m.start()
-      assert.notEqual(m._interval, null)
-    })
-
-    it('starts a new interval when started manually', () => {
-      const m = new Monitor(mockPubsub, topic, { start: false })
-      assert.equal(m._interval, null)
-      m.start()
-      const previous = m._interval
-      m.start()
-      assert.notEqual(m._interval, previous)
+      assert.notEqual(m.started, true)
     })
 
     it('stops polling peers', () => {
       const m = new Monitor(mockPubsub, topic)
       m.stop()
-      assert.equal(m._interval, null)
+      assert.equal(m.started, false)
     })
 
     it('polls with the given interval', async () => {

@@ -9,7 +9,7 @@
   "author": "Haad",
   "license": "MIT",
   "dependencies": {
-    "hyperdiff": "^2.0.4"
+    "p-forever": "^1.0.1"
   },
   "devDependencies": {
     "mocha": "^5.0.5"

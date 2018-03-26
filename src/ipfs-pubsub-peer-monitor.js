@@ -1,7 +1,8 @@
 'use strict'
 
-const diff = require('hyperdiff')
 const EventEmitter = require('events')
+const pForever = require('p-forever')
+const { runWithDelay, difference} = require('./utils')
 
 const DEFAULT_OPTIONS = {
   start: true,
@@ -14,52 +15,63 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
     this._pubsub = ipfsPubsub
     this._topic = topic
     this._options = Object.assign({}, DEFAULT_OPTIONS, options)
-    this._peers = []
+    this._started = false // state
 
     if (this._options.start)
       this.start()
   }
 
-  start () {
-    if (this._interval)
-      this.stop()
+  async getPeers () {
+    return await this._pubsub.peers(this._topic)
+  }
 
-    this._interval = setInterval(
-      this._pollPeers.bind(this), 
-      this._options.pollInterval
+  get started () { return this._started }
+  set started (v) { throw new Error("'started' is read-only") }
+
+  start () {
+    if (this.started)
+      return
+
+    IpfsPubsubPeerMonitor._start(
+      this._pubsub, 
+      this._topic, 
+      this._options.pollInterval, 
+      this,
+      {
+        beforeEach: () => this._started = true, // Set the state to started before each poll loop
+        shouldStop: () => this.started, // Tell the poll loop if we should continue
+      }
     )
   }
 
   stop () {
-    clearInterval(this._interval)
-    this._interval = null
+    this._started = false
   }
 
-  async getPeers () {
-    this._peers = await this._pubsub.peers(this._topic)
-    return this._peers.slice()
-  }
+  static _start (pubsub, topic, interval, eventEmitter, options) {
+    const shouldStop = !options && !options.shouldContinue && !options.shouldContinue()
+    const beforeEach = options && options.beforeEach ? options.beforeEach : () => {}
 
-  hasPeer (peer) {
-    return this._peers.includes(peer)
-  }
-
-  async _pollPeers () {
-    try {
-      const peers = await this._pubsub.peers(this._topic)
-      this._emitChanges(this._peers, peers)
-      this._peers = peers
-    } catch (err) {
-        this.emit('error', err)
+    const pollAndEmitChanges = async (previousPeers) => {
+      let peers = []
+      try {
+        beforeEach()
+        peers = await runWithDelay(pubsub.peers, topic, interval)
+        IpfsPubsubPeerMonitor._emitJoinsAndLeaves(new Set(previousPeers), new Set(peers), eventEmitter)
+      } catch (e) {
+        eventEmitter.emit('error', e)
+      }
+      return shouldStop ? pForever.end : peers
     }
+
+    pForever(pollAndEmitChanges, [])
   }
 
-  _emitChanges (oldPeers, newPeers) {
-    const differences = diff(oldPeers, newPeers)
-    const emitJoin = (addedPeer) => this.emit('join', addedPeer)
-    const emitLeave = (removedPeer) => this.emit('leave', removedPeer)
-    differences.added.forEach(emitJoin)
-    differences.removed.forEach(emitLeave)
+  static _emitJoinsAndLeaves (oldValues, newValues, eventEmitter) {
+    const emitJoin = e => eventEmitter.emit('join', e)
+    const emitLeave = e => eventEmitter.emit('leave', e)
+    difference(newValues, oldValues).forEach(emitJoin)
+    difference(oldValues, newValues).forEach(emitLeave)
   }
 }
 
