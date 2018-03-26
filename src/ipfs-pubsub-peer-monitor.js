@@ -35,7 +35,8 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
     this._interval = null
   }
 
-  getPeers () {
+  async getPeers () {
+    this._peers = await this._pubsub.peers(this._topic)
     return this._peers.slice()
   }
 
