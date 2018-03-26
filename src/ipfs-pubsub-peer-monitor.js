@@ -21,11 +21,18 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
   }
 
   start () {
-    this._interval = setInterval(this._pollPeers.bind(this), this._options.pollInterval)
+    if (this._interval)
+      this.stop()
+
+    this._interval = setInterval(
+      this._pollPeers.bind(this), 
+      this._options.pollInterval
+    )
   }
 
   stop () {
     clearInterval(this._interval)
+    this._interval = null
   }
 
   getPeers () {
@@ -36,15 +43,14 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
     return this._peers.includes(peer)
   }
 
-  _pollPeers () {
-    this._pubsub.peers(this._topic, (err, peers) => {
-      if (err) {
-        this.emit('error', err)
-        return // early
-      }
+  async _pollPeers () {
+    try {
+      const peers = await this._pubsub.peers(this._topic)
       this._emitChanges(this._peers, peers)
       this._peers = peers
-    })
+    } catch (err) {
+        this.emit('error', err)
+    }
   }
 
   _emitChanges (oldPeers, newPeers) {
