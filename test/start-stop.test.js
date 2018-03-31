@@ -22,6 +22,20 @@ describe('start and stop', () => {
     assert.equal(err, "Error: 'started' is read-only")
   })
 
+  it('removes all event listeners on stop', async () => {
+    const m = new Monitor(mockPubsub, topic)
+    m.on('error', () => {})
+    m.on('join', () => {})
+    m.on('leave', () => {})
+    assert.equal(m.listenerCount('error'), 1)
+    assert.equal(m.listenerCount('join'), 1)
+    assert.equal(m.listenerCount('leave'), 1)
+    m.stop()
+    assert.equal(m.listenerCount('error'), 0)
+    assert.equal(m.listenerCount('join'), 0)
+    assert.equal(m.listenerCount('leave'), 0)    
+  })
+
   describe('poll loop', () => {
     it('starts polling peers', () => {
       const m = new Monitor(mockPubsub, topic)

@@ -46,6 +46,9 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
 
   stop () {
     this._started = false
+    this.removeAllListeners('error')
+    this.removeAllListeners('join')
+    this.removeAllListeners('leave')
   }
 
   static _start (pubsub, topic, interval, eventEmitter, options) {
