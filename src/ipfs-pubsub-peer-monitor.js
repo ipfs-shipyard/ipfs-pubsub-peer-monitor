@@ -57,7 +57,8 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
       IpfsPubsubPeerMonitor._emitJoinsAndLeaves(new Set(this._peers), new Set(peers), this)
       this._peers = peers
     } catch (err) {
-        this.emit('error', err)
+      clearInterval(this._interval)
+      this.emit('error', err)
     }
   }
 
