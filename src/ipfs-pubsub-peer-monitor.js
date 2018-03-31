@@ -45,14 +45,13 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
   }
 
   stop () {
-    this._started = false
     this.removeAllListeners('error')
     this.removeAllListeners('join')
     this.removeAllListeners('leave')
+    this._started = false
   }
 
   static _start (pubsub, topic, interval, eventEmitter, options) {
-    const shouldStop = !options && !options.shouldContinue && !options.shouldContinue()
     const beforeEach = options && options.beforeEach ? options.beforeEach : () => {}
 
     const pollAndEmitChanges = async (previousPeers) => {
@@ -62,8 +61,10 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
         peers = await runWithDelay(pubsub.peers, topic, interval)
         IpfsPubsubPeerMonitor._emitJoinsAndLeaves(new Set(previousPeers), new Set(peers), eventEmitter)
       } catch (e) {
-        eventEmitter.emit('error', e)
+        if (this._started)
+          eventEmitter.emit('error', e)
       }
+      const shouldStop = !options && !options.shouldStop && !options.shouldStop()
       return shouldStop ? pForever.end : peers
     }
 
