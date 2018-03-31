@@ -59,7 +59,8 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
       try {
         beforeEach()
         peers = await runWithDelay(pubsub.peers, topic, interval)
-        IpfsPubsubPeerMonitor._emitJoinsAndLeaves(new Set(previousPeers), new Set(peers), eventEmitter)
+        if (this._started)
+          IpfsPubsubPeerMonitor._emitJoinsAndLeaves(new Set(previousPeers), new Set(peers), eventEmitter)
       } catch (e) {
         if (this._started)
           eventEmitter.emit('error', e)
