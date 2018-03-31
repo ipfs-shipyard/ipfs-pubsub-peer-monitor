@@ -33,14 +33,14 @@ describe('start and stop', () => {
     m.stop()
     assert.equal(m.listenerCount('error'), 0)
     assert.equal(m.listenerCount('join'), 0)
-    assert.equal(m.listenerCount('leave'), 0)    
+    assert.equal(m.listenerCount('leave'), 0)
   })
 
   describe('poll loop', () => {
     it('starts polling peers', () => {
       const m = new Monitor(mockPubsub, topic)
       assert.notEqual(m, null)
-      assert.notEqual(m.started, true)
+      assert.equal(m.started, true)
     })
 
     it('doesn\'t start polling peers', () => {
@@ -52,7 +52,7 @@ describe('start and stop', () => {
     it('starts polling peers when started manually', () => {
       const m = new Monitor(mockPubsub, topic, { start: false })
       m.start()
-      assert.notEqual(m.started, true)
+      assert.equal(m.started, true)
     })
 
     it('stops polling peers', () => {
