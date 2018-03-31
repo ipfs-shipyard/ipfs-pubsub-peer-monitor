@@ -1,6 +1,6 @@
 {
   "name": "ipfs-pubsub-peer-monitor",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Monitor peers joining and leaving an IPFS PubSub topic",
   "main": "src/ipfs-pubsub-peer-monitor.js",
   "scripts": {
