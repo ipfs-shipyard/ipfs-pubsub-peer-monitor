@@ -32,6 +32,7 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
       this._pollPeers.bind(this), 
       this._options.pollInterval
     )
+    this._pollPeers()
   }
 
   stop () {
