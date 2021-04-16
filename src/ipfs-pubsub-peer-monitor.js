@@ -29,7 +29,7 @@ class IpfsPubsubPeerMonitor extends EventEmitter {
       this.stop()
 
     this._interval = setInterval(
-      this._pollPeers.bind(this), 
+      this._pollPeers.bind(this),
       this._options.pollInterval
     )
     this._pollPeers()

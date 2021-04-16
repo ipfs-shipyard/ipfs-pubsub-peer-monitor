@@ -66,7 +66,9 @@ describe('start and stop', () => {
       const margin = interval / 10
 
       const m = new Monitor(mockPubsub, topic, { pollInterval: interval })
-      const startTime = new Date().getTime()
+      // Substract the interval from the time since the interval also
+      // fires immediately instead of waiting for the interval
+      const startTime = new Date().getTime() - interval
 
       await new Promise((resolve, reject) => {
         let count = 0
